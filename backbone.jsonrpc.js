@@ -4,7 +4,21 @@
 
         // pass along method as option in fetch
         Backbone.Model.prototype.fetch = function(options) {
-            return oldFetch.call(this, _.extend({}, options, { method: this.method, params: this.params }));
+
+            // check for method
+            if (_.isUndefined(this.method)) throw 'no method defined';
+
+            // add namespace to method if applicable
+            var method = _.isUndefined(this.namespace) ? this.method : this.namespace + '.' + this.method;
+
+            // data for request
+            var data = { jsonrpc: '2.0', id: _.uniqueId(), method: method };
+
+            // add params if present
+            if (!_.isUndefined(this.params)) data.params = this.params;
+
+            // call old fetch method with new options
+            return oldFetch.call(this, _.extend({}, options, { type: 'post', data: data }));
         };
 
         // parse json-rpc response
@@ -17,27 +31,7 @@
     // overwrite Backbone.ajax with JSON-RPC method
     Backbone.ajax = function(options) {
 
-        // check for method
-        if (_.isUndefined(options.method)) throw 'no method defined';
-
-        // data for request
-        var data = {
-            jsonrpc : '2.0',
-            id      : _.uniqueId(),
-            method  : options.method
-        };
-
-        // add params if present
-        if (!_.isUndefined(options.params)) data.params = options.params;
-
         // make request
-        return $.ajax({
-            type     : 'post',
-            url      : options.url,
-            success  : options.success,
-            error    : options.error,
-            dataType : 'json',
-            data     : data
-        });
+        return $.ajax(options);
     }
 }($, _, Backbone));

@@ -55,6 +55,26 @@ asyncTest('make good request (with params)', 3, function() {
     });
 });
 
+asyncTest('use a namespace', 2, function() {
+    var Model = Backbone.Model.extend({ url: this.fakeUrl, method: 'foo', namespace: 'ns' })
+    , myModel = new Model();
+
+    myModel.fetch({ success: function() { ok(true); start(); } });
+
+    this.server.respondWith('post', this.fakeUrl, function(req) {
+        var data = qs.parse(req.requestBody)
+            , responseBody = JSON.stringify({
+                jsonrpc : '2.0',
+                id      : 1,
+                result  : { bar: 'baz' }
+            });
+
+        equal(data.method, 'ns.foo');
+
+        req.respond(200, { "Content-Type": "text/json", "Content-Length": responseBody.length }, responseBody);
+    });
+});
+
 test('make a bad request (missing method)', 1, function() {
     var Model = Backbone.Model.extend({ url: this.fakeUrl });
     raises(function() { (new Model()).fetch() });
