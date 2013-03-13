@@ -1,37 +1,37 @@
 (function($, _, Backbone) {
 
-    (function(oldFetch){
+    // new fetch function
+    var newFetch = function(oldFetch, options) {
 
-        // pass along method as option in fetch
-        Backbone.Model.prototype.fetch = function(options) {
+        // check for method
+        if (_.isUndefined(this.method)) throw 'no method defined';
 
-            // check for method
-            if (_.isUndefined(this.method)) throw 'no method defined';
+        // add namespace to method if applicable
+        var method = _.isUndefined(this.namespace) ? this.method : this.namespace + '.' + this.method;
 
-            // add namespace to method if applicable
-            var method = _.isUndefined(this.namespace) ? this.method : this.namespace + '.' + this.method;
+        // data for request
+        var data = { jsonrpc: '2.0', id: _.uniqueId(), method: method };
 
-            // data for request
-            var data = { jsonrpc: '2.0', id: _.uniqueId(), method: method };
+        // add params if present
+        if (!_.isUndefined(this.params)) data.params = this.params;
 
-            // add params if present
-            if (!_.isUndefined(this.params)) data.params = this.params;
+        // call old fetch method with new options
+        return oldFetch.call(this, _.extend({}, options, { type: 'post', data: data }));
+    };
 
-            // call old fetch method with new options
-            return oldFetch.call(this, _.extend({}, options, { type: 'post', data: data }));
-        };
+    // pass along method as option in Backbone.Model.fetch
+    Backbone.Model.prototype.fetch = _.partial(newFetch, Backbone.Model.prototype.fetch);
 
-        // parse json-rpc response
-        Backbone.Model.prototype.parse = function(resp) {
-            return resp.result;
-        };
+    // ...and Backbone.Collection.fetch
+    Backbone.Collection.prototype.fetch = _.partial(newFetch, Backbone.Collection.prototype.fetch);
 
-    }(Backbone.Model.prototype.fetch));
+    // parse json-rpc response for Backbone.Models and Backbone.Collections
+    Backbone.Model.prototype.parse = Backbone.Collection.prototype.parse = function(resp) {
+        if (_.has(resp, 'result'))  return resp.result;
+        return resp;
+    };
 
     // overwrite Backbone.ajax with JSON-RPC method
-    Backbone.ajax = function(options) {
+    Backbone.ajax = function(options) { return $.ajax(options); }
 
-        // make request
-        return $.ajax(options);
-    }
 }($, _, Backbone));

@@ -97,6 +97,36 @@ asyncTest('use a namespace', 2, function() {
     });
 });
 
+asyncTest('use a collection', 6, function() {
+    var Model = Backbone.Model.extend()
+    , Collection = Backbone.Collection.extend({ url: this.fakeUrl, namespace: 'coll', method: 'list', model: Model })
+    , myColl = new Collection();
+
+    myColl.fetch({ success: function() {
+        equal(myColl.models.length, 2);
+        equal(myColl.models[0].get('_id'), 1);
+        equal(myColl.models[0].get('name'), 'Fry');
+        equal(myColl.models[1].get('_id'), 2);
+        equal(myColl.models[1].get('name'), 'Bender');
+        start();
+    }});
+
+    this.server.respondWith('post', this.fakeUrl, function(req) {
+        var data = qs.parse(req.requestBody)
+        , responseBody = JSON.stringify({
+            jsonrpc : '2.0',
+            id      : 1,
+            result  : [ { _id: 1, name: 'Fry' }, { _id: 2, name: 'Bender' } ]
+        });
+
+        equal(data.method, 'coll.list');
+
+        req.respond(200, { "Content-Type": "text/json", "Content-Length": responseBody.length }, responseBody);
+    });
+});
+
+
+
 test('make a bad request (missing method)', 1, function() {
     var Model = Backbone.Model.extend({ url: this.fakeUrl });
     raises(function() { (new Model()).fetch() });
