@@ -13,7 +13,11 @@
         var data = { jsonrpc: '2.0', id: _.uniqueId(), method: method };
 
         // add params if present
-        if (!_.isUndefined(this.params)) data.params = this.params;
+        if (!_.isUndefined(this.params)) {
+            if (_.isFunction(this.params)) data.params = this.params();
+            else if (_.isArray(this.params) || _.isObject(this.params)) data.params = this.params;
+            else data.params = [ this.params ];
+        }
 
         // turn data into a JSON string
         data = JSON.stringify(data);

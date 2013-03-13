@@ -34,6 +34,27 @@ asyncTest('make good request (no params)', 2, function() {
     });
 });
 
+asyncTest('make good request (single param)', 3, function() {
+    var Model = Backbone.Model.extend({ url: this.fakeUrl, method: 'double', params: 5 })
+        , myModel = new Model();
+
+    myModel.fetch({ success: function() { equal(myModel.get('value'), 10); start(); } });
+
+    this.server.respondWith('post', this.fakeUrl, function(req) {
+        var data = $.parseJSON(req.requestBody)
+            , responseBody = JSON.stringify({
+                jsonrpc : '2.0',
+                id      : 1,
+                result  : { value: 10 }
+            });
+
+        equal(data.method, 'double');
+        deepEqual(data.params, [5]);
+
+        req.respond(200, { "Content-Type": "text/json", "Content-Length": responseBody.length }, responseBody);
+    });
+});
+
 asyncTest('make good request (with unnamed params)', 3, function() {
     var Model = Backbone.Model.extend({ url: this.fakeUrl, method: 'sum', params: [5,6] })
     , myModel = new Model();
@@ -50,6 +71,29 @@ asyncTest('make good request (with unnamed params)', 3, function() {
 
         equal(data.method, 'sum');
         deepEqual(data.params, [5, 6]);
+
+        req.respond(200, { "Content-Type": "text/json", "Content-Length": responseBody.length }, responseBody);
+    });
+});
+
+asyncTest('make good request (params is a function)', 3, function() {
+    var Model = Backbone.Model.extend({ url: this.fakeUrl, method: 'info' })
+    , myModel = new Model();
+
+    myModel.set('uid', 170);
+    myModel.params = function () { return [ this.get('uid') ]; };
+    myModel.fetch({ success: function() { equal(myModel.get('name'), 'Farnsworth'); start(); } });
+
+    this.server.respondWith('post', this.fakeUrl, function(req) {
+        var data = $.parseJSON(req.requestBody)
+            , responseBody = JSON.stringify({
+                jsonrpc : '2.0',
+                id      : 1,
+                result  : { name: 'Farnsworth' }
+            });
+
+        equal(data.method, 'info');
+        deepEqual(data.params, [170]);
 
         req.respond(200, { "Content-Type": "text/json", "Content-Length": responseBody.length }, responseBody);
     });
