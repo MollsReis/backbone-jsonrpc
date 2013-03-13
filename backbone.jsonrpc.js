@@ -15,6 +15,9 @@
         // add params if present
         if (!_.isUndefined(this.params)) data.params = this.params;
 
+        // turn data into a JSON string
+        data = JSON.stringify(data);
+
         // call old fetch method with new options
         return oldFetch.call(this, _.extend({}, options, { type: 'post', data: data }));
     };
@@ -27,7 +30,7 @@
 
     // parse json-rpc response for Backbone.Models and Backbone.Collections
     Backbone.Model.prototype.parse = Backbone.Collection.prototype.parse = function(resp) {
-        if (_.has(resp, 'result'))  return resp.result;
+        if (_.has(resp, 'result')) return resp.result;
         return resp;
     };
 

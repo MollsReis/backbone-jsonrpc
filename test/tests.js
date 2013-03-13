@@ -21,7 +21,7 @@ asyncTest('make good request (no params)', 2, function() {
     myModel.fetch({ success: function() { equal(myModel.get('bar'), 'baz'); start(); } });
 
     this.server.respondWith('post', this.fakeUrl, function(req) {
-        var data = qs.parse(req.requestBody)
+        var data = $.parseJSON(req.requestBody)
         , responseBody = JSON.stringify({
             jsonrpc : '2.0',
             id      : 1,
@@ -41,7 +41,7 @@ asyncTest('make good request (with unnamed params)', 3, function() {
     myModel.fetch({ success: function() { equal(myModel.get('mysum'), 11); start(); } });
 
     this.server.respondWith('post', this.fakeUrl, function(req) {
-        var data = qs.parse(req.requestBody)
+        var data = $.parseJSON(req.requestBody)
         , responseBody = JSON.stringify({
             jsonrpc : '2.0',
             id      : 1,
@@ -49,7 +49,7 @@ asyncTest('make good request (with unnamed params)', 3, function() {
         });
 
         equal(data.method, 'sum');
-        deepEqual(data.params, ['5', '6']);
+        deepEqual(data.params, [5, 6]);
 
         req.respond(200, { "Content-Type": "text/json", "Content-Length": responseBody.length }, responseBody);
     });
@@ -62,7 +62,7 @@ asyncTest('make good request (with named params)', 4, function() {
     myModel.fetch({ success: function() { equal(myModel.get('mydiff'), 5); start(); } });
 
     this.server.respondWith('post', this.fakeUrl, function(req) {
-        var data = qs.parse(req.requestBody)
+        var data = $.parseJSON(req.requestBody)
             , responseBody = JSON.stringify({
                 jsonrpc : '2.0',
                 id      : 1,
@@ -70,8 +70,8 @@ asyncTest('make good request (with named params)', 4, function() {
             });
 
         equal(data.method, 'diff');
-        equal(data.params.first, '10');
-        equal(data.params.second, '5');
+        equal(data.params.first, 10);
+        equal(data.params.second, 5);
 
         req.respond(200, { "Content-Type": "text/json", "Content-Length": responseBody.length }, responseBody);
     });
@@ -84,7 +84,7 @@ asyncTest('use a namespace', 2, function() {
     myModel.fetch({ success: function() { ok(true); start(); } });
 
     this.server.respondWith('post', this.fakeUrl, function(req) {
-        var data = qs.parse(req.requestBody)
+        var data = $.parseJSON(req.requestBody)
             , responseBody = JSON.stringify({
                 jsonrpc : '2.0',
                 id      : 1,
@@ -112,7 +112,7 @@ asyncTest('use a collection', 6, function() {
     }});
 
     this.server.respondWith('post', this.fakeUrl, function(req) {
-        var data = qs.parse(req.requestBody)
+        var data = $.parseJSON(req.requestBody)
         , responseBody = JSON.stringify({
             jsonrpc : '2.0',
             id      : 1,
