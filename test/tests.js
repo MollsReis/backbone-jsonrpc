@@ -77,11 +77,9 @@ asyncTest('make good request (with unnamed params)', 3, function() {
 });
 
 asyncTest('make good request (params is a function)', 3, function() {
-    var Model = Backbone.Model.extend({ url: this.fakeUrl, method: 'info' })
-    , myModel = new Model();
+    var Model = Backbone.Model.extend({ url: this.fakeUrl, method: 'info', params: function () { return [ this.get('uid') ]; } })
+    , myModel = new Model({ uid: 170 });
 
-    myModel.set('uid', 170);
-    myModel.params = function () { return [ this.get('uid') ]; };
     myModel.fetch({ success: function() { equal(myModel.get('name'), 'Farnsworth'); start(); } });
 
     this.server.respondWith('post', this.fakeUrl, function(req) {
